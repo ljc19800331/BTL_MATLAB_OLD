@@ -1,0 +1,59 @@
+figure(1);
+
+for flag_img = 1:5
+
+flag_img  
+  
+% load the images
+subplot(2,3,flag_img); 
+test = sec_vessel();
+test.imgpath = strcat('img_Wes/IMG_378',num2str(flag_img-1),'.JPG');
+test.NumColors = 10;
+Lout = test.method_1(); % the output label matrix of the whole image
+
+% segment the regions
+Res = [];
+
+for idx_test = 1: test.NumColors
+    
+%subplot(3,4,idx_test);
+img_obj = imread(test.imgpath);
+img_gray = rgb2gray(img_obj);
+img_gray(Lout==idx_test) = 255;
+img_gray(Lout~=idx_test) = 0;
+
+img_use = img_gray;
+img_bin = imbinarize(img_use);
+L = bwlabel(img_bin);
+[r, c] = find(L==3);
+
+if length(r) == 0 % & length(find(L==1)) > Res_size
+    Res(idx_test) = 1;
+%     idx_test
+%     imshow(img_use);
+else
+    Res(idx_test) = 0; 
+%     idx_test
+%     Res
+end
+end 
+
+if length(find(Res==1)) > 1
+    idx_1 = find(Res == 1 );
+    % compare the size
+    Res_1 = [];
+    for i =  1: length(idx_1)
+        mat = (Lout == idx_1(i));
+        Res_1(i) = length(find(mat==1));
+    end
+    [value_use, idx_use] = max(Res_1);
+    idx_out = idx_1(idx_use);
+else
+    idx_out = find(Res == 1 );
+end
+    img_gray = rgb2gray(img_obj);
+    img_gray(Lout==idx_out) = 255;
+    img_gray(Lout~=idx_out) = 0;
+    img_use = img_gray;
+    imshow(img_use);
+end
