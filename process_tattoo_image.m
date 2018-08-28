@@ -43,7 +43,6 @@ function [xy_coordinates, image_dilated] = process_tattoo_image(filename)
         pause(0.01)
     end
 
-
 %% clean up the image by hand.
     disp('Clean image.');
     h1 = figure; title('Clean the image...')
