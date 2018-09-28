@@ -7,17 +7,16 @@
 % 6. ErrorMap
 % 7. sec_GSsegSurf 
 
-classdef BTL_ICRA
-    
+classdef BTL_use
     properties
-        MTI2D_NPY_name = 'P_MTI_Calibration_interpolation_2D.npy';
-        MTI3D_NPY_name = 'P_MTI_Calibration_interpolation_3D.npy';
+        MTI2D_NPY_name = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\exp_18\P_MTI_Calibration_interpolation_2D_before.npy';
+        MTI3D_NPY_name = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\exp_18\P_MTI_Calibration_interpolation_3D_before.npy';
         STEREO3D_NPY_name = 'P_STEREO_Calibration_3D.npy';
-        Template_img_name = 'Aug27.jpg';
+        Template_img_name = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\exp_18\before_imagej.png';
         Texture_name = 'MTI_textures.npy';
         Vertex_name = 'MTI_vertices.npy'
-        img_name = 'Aug27.jpg';
-        idx_miss = [1816, 1936, 1937, 1965, 1966, 1967, 1968, 2083, 2084, 2085, 2086, 2087, 2115, 2116, 2117, 2118, 2119, 2233, 2234, 2235, 2236, 2237, 2266, 2267, 2268, 2269, 2384, 2385, 2386, 2417];
+        img_name = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\exp_18\before_imagej.png';
+        idx_miss = [];
     end
     methods 
         function [net, P_MTI_2d, P_MTI_3d] = Calibration_ANN(obj)
@@ -36,7 +35,7 @@ classdef BTL_ICRA
             
             % Train the model
             fprintf("Begin to train the model \n");
-            net = fitnet(4); % NUMBER OF NEURONS IN HIDDEN LAYER
+            net = fitnet(15, 'trainbr'); % NUMBER OF NEURONS IN HIDDEN LAYER
             [net tr y e] = train(net, P_MTI_2d', P_MTI_3d');
            
         end 
@@ -85,7 +84,7 @@ classdef BTL_ICRA
             Cell_2d = {};          
             Cell_3d = {};
             
-            N_near = 20;     % The number of nearby pixels for KNN
+            N_near = 10;     % The number of nearby pixels for KNN
             
             for i = 1 : length(X_laser) 
                 i
@@ -98,12 +97,27 @@ classdef BTL_ICRA
                 Cell_2d{i} = pixel_2d;
                 % Nearby point coordinates -- 3D
                 idx_3d = idx_2d;
-                point_3d = P_MTI_3d(idx_3d,:);
+                point_3d = P_MTI_3d(idx_3d,:); 
+                % Inverse distance weighting
+                
+                % d2 = sqrt(sum(value_2d.^2));
+                sum_1 = sum(value_2d);
+                w = value_2d ./ sum_1;
+                
+                % Inverse interpolation method
                 Cell_3d{i} = point_3d;
+                
                 % The mean of the nearby 3D points
                 point_final = mean(point_3d);
-                % Save the data
+                
+                % Save the data 
+%                 x_weight = sum(w' .* point_3d(:,1));
+%                 y_weight = sum(w' .* point_3d(:,2));
+%                 z_weight = sum(w' .* point_3d(:,3));
+%                 
+%                 data_use(i,:) = [x_weight, y_weight, z_weight];
                 data_use(i,:) = point_final;
+                
             end
             
         end
@@ -128,7 +142,7 @@ classdef BTL_ICRA
                 [pixel_test, image_dilated] = process_tattoo_image(obj.img_name);
             end
         end
-        function [] = FastPc(obj, p1, p2)
+        function [MTI_tex, MTI_vtx, colorvec] = FastPc(obj, p1, p2)
 
             % Read the data
             MTI_vtx = readNPY(obj.Texture_name);

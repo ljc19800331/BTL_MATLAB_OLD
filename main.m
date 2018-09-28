@@ -1,3 +1,24 @@
+% Test the BTL_ICRA class
+%% Err_2D
+test = BTL_ICRA();
+[pRMSE, nRMSE, pMAE, nMAE] = test.Err_pixel();
+
+%% Err_pixel
+clc;clear all;close all;
+test = BTL_ICRA();
+[data] = test.Err_pixel(); 
+
+%% RANSAC
+clc; clear all; close all;
+test = BTL_ICRA(); 
+[CELL] = test.NPNP();
+[R_best, t_best] = test.RANSAC(CELL);
+
+%% GetTargetPc
+clc;clear all;close all;
+test = BTL_ICRA();
+[TARGET_mti] = test.GetTargetPc();
+
 %% Method 1: ANN
 test = BTL_use();
 flag_method = 2;
