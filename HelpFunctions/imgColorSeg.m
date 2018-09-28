@@ -1,7 +1,7 @@
 function [xy_coordinates, img_output, Lout] = imgColorSeg(img_template, NumColors)
 
 img_lab = rgb2lab(img_template);
-[L, N] = superpixels(img_lab, 20000, 'isInputLab', true);
+[L, N] = superpixels(img_lab, 25000, 'isInputLab', true);
 BW = boundarymask(L);
 
 % convert the sp to cell array
