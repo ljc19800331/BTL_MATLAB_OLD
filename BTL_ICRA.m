@@ -139,19 +139,20 @@ classdef BTL_ICRA
             data.N_out = length(E_out);
                                                     
         end 
-        function [CELL] = NPNP(obj)
+        function [CELL] = NPNP(obj, n_set)
             % ref: https://igl.ethz.ch/projects/ARAP/svd_rot.pdf
             % ref: http://nghiaho.com/uploads/code/rigid_transform_3D.m 
             
             CELL = {};
-            n_set = 10;
-            folder = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\CalibrateNPNP_1\pos_'; 
+            % n_set = 5;
+            folder = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\CalibrateNPNP_2\pos_'; 
             
             % Load the data
             for N = 1:n_set
                 data = [];
                 foldername = strcat(folder, num2str(N), '\');
                 data.P_MTI_3d = readNPY(strcat(foldername, 'P_MIT_target_3d.npy'));
+                data.P_MTI_3d = data.P_MTI_3d * 2.54;
                 data.P_MTI_2d = double(readNPY(strcat(foldername, 'P_MTI_Calibration_interpolation_2D.npy')));
                 data.MTI_tex = readNPY(strcat(foldername, 'MTI_textures.npy'));
                 data.MTI_vtx = readNPY(strcat(foldername, 'MTI_vertices.npy'));
@@ -211,15 +212,15 @@ classdef BTL_ICRA
                 
                 figure(1);clf;pcshow(CENTROID, 'r');
                 xlabel('x'); ylabel('y'); zlabel('z');
-
+                CENTROID = CENTROID * 100;
                 CELL{N}.P_STEREO_3d = CENTROID;
                 
             end 
         end
-        function [R_best, t_best] = RANSAC(obj, CELL)
+        function [R_best, t_best] = RANSAC(obj, CELL, n_set, n_load)
             
             % Load the 2D and 3D data
-            n_set = 10
+            
             P_MTI_3d = [];
             for i = 1:n_set
                 mti_3d = CELL{i}.P_MTI_3d;
@@ -232,8 +233,8 @@ classdef BTL_ICRA
                 P_STEREO_3d = [P_STEREO_3d;stereo_3d];
             end
             % Load the data
-            A = P_STEREO_3d(1:1000,:);    % moving
-            B = P_MTI_3d(1:1000,:);       % fixed
+            A = P_STEREO_3d(1:n_load,:);    % moving
+            B = P_MTI_3d(1:n_load,:);       % fixed
 
             % RANSAC parameters
             number = length(A);                 % Total number of points
@@ -244,10 +245,10 @@ classdef BTL_ICRA
             inlierRatio = 0.9;                  % inlierratio is 50% 
             threshDist = 0.188;                 % threshold distance is 0.05 -- 1.57 mm
 
-            for iter = 1: 1000
+            for iter = 1: n_load
+                
             iter
             idx = randperm(number, num); 
-
             % Apply the transformation
             moving = A(idx,:); fixed = B(idx,:); 
             [R,t] = rigid_transform_3D(moving, fixed); 
@@ -302,10 +303,10 @@ classdef BTL_ICRA
             rmse_final = sqrt(err_final/n)
             
         end
-        function [TARGET_mti] = GetTargetPc(obj)
+        function [TARGET_mti] = GetTargetPc(obj, R_final, t_final)
            
             % Get the target point cloud
-            foldername = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\exp_3D\';
+            foldername = 'C:\Users\gm143\Documents\MATLAB\BTL\Data\exp_Phantom\pos_8\before\';
             MTI_tex_target = readNPY(strcat(foldername, 'MTI_textures.npy'));
             MTI_vtx_target = readNPY(strcat(foldername, 'MTI_vertices.npy'));
             imgtarget = strcat(foldername, 'target.png');
@@ -386,11 +387,11 @@ classdef BTL_ICRA
             xlabel('x'); ylabel('y'); zlabel('z');
             
             % Transformation information
-            R_final = [
-                        -0.9996    0.0059    0.0272
-                        -0.0137   -0.9547   -0.2973
-                         0.0243   -0.2976    0.9544 ]; 
-            t_final = [-2.7033  5.6484  -0.3263];
+%             R_final = [
+%                         -0.9996    0.0059    0.0272
+%                         -0.0137   -0.9547   -0.2973
+%                          0.0243   -0.2976    0.9544 ]; 
+%             t_final = [-2.7033  5.6484  -0.3263];
             
             % color target MTI to stereo  
             TARGET(isnan(TARGET(:,1)),:) = [];
@@ -576,9 +577,3 @@ classdef BTL_ICRA
         end
     end
 end
-
-
-
-
-
-
